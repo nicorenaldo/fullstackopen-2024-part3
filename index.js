@@ -90,20 +90,24 @@ app.post('/api/persons', async (request, response) => {
     number: body.number,
   });
 
-  // Check if name already exists
-  const existingName = await Person.findOne({ name: body.name });
-  if (existingName) {
-    return response.status(400).json({
-      error: 'name must be unique',
-    });
-  }
-
   // Check if number already exists
   const existingNumber = await Person.findOne({ number: body.number });
   if (existingNumber) {
     return response.status(400).json({
       error: 'number must be unique',
     });
+  }
+
+  const existingName = await Person.findOne({ name: body.name });
+  if (existingName) {
+    existingName.number = body.number;
+    await existingName
+      .save()
+      .then((savedPerson) => {
+        response.json(savedPerson);
+      })
+      .catch((error) => next(error));
+    return;
   }
 
   person.save().then((savedPerson) => {
